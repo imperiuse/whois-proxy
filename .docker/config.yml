@@ -1,0 +1,33 @@
+graylog:
+  host: graylog-host
+  port: 12201
+  platform: whois-proxy
+
+  enableFileLog: true
+  nameLogFile: ""
+  disableColor: true
+  debugLvl: false
+
+service:
+  host: 0.0.0.0
+  port: 43
+  maxCntConnect: 4000
+
+  maxLenBuffer: 4096
+  readTimeout: 30
+  writeTimeout: 30
+
+  cacheTTL: 300
+  cacheReset: 86400
+
+  errorMsgTemplate: 'Bad request params'
+
+  defaultWhois: 'whois.default.com:43'
+  domainZoneWhois:
+    ru: 'whois.tcinet.ru:43'
+    xn--p1ai: 'whois.tcinet.ru:43'
+    su: 'whois.tcinet.ru:43'
+
+  addWhoisDescInfo:
+    example.com:
+      - 'descr:         some descr'

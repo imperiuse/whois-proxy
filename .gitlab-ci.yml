@@ -1,0 +1,97 @@
+variables:
+  STAGING_IMAGE: $CI_REGISTRY_IMAGE/staging:latest
+  MASTER_IMAGE: $CI_REGISTRY_IMAGE/master:latest
+  DOCKER_PRODUCTION_IMAGE: $CI_REGISTRY_IMAGE/production:$CI_COMMIT_TAG
+  GO_VERSION: "1.13"
+  ALPINE_VERSION: "3.10"
+
+stages:
+  - build
+  - lint
+  - tests
+  - deploy
+
+"Build testing image":
+  stage: build
+  tags:
+    - docker-build
+  script:
+    # Build image from Dockerfile
+    - docker build
+      --pull
+      --build-arg GO_VERSION=${GO_VERSION}
+      --build-arg ALPINE_VERSION=${ALPINE_VERSION}
+      --target build-env
+      -t ${STAGING_IMAGE}
+      -f .docker/Dockerfile .
+    # Push image to registry
+    - docker push ${STAGING_IMAGE}
+
+"Scan with golangci-lint":
+  stage: lint
+  only:
+    - branches
+  tags:
+    - golangci-lint
+  before_script:
+    - go mod download
+  script:
+    - golangci-lint run -v ./...
+
+"Make tests":
+  stage: tests
+  tags:
+    - docker-socket
+  image: ${STAGING_IMAGE}
+  before_script:
+    - PKG_LIST=$(go list ./... | grep -v /vendor/)
+  script:
+    - go test -timeout 5m -race -short $PKG_LIST
+    - /bin/bash ./tool/coverage.sh
+
+"Build master image":
+  stage: build
+  tags:
+    - docker-build
+  only:
+    - master
+  script:
+    # Build image from Dockerfile
+    - docker build
+      --pull
+      --build-arg GO_VERSION=${GO_VERSION}
+      --build-arg ALPINE_VERSION=${ALPINE_VERSION}
+      --cache-from ${STAGING_IMAGE}
+      --target app
+      -t ${MASTER_IMAGE}
+      -f .docker/Dockerfile .
+    # Push image to registry
+    - docker push ${MASTER_IMAGE}
+
+"Build production image":
+  stage: build
+  tags:
+    - docker-build
+  only:
+    - /^v\d+\.\d+\.\d+(\-[a-z]+)?$/
+  except:
+    - branches
+  script:
+    - docker pull $MASTER_IMAGE
+    - docker tag $MASTER_IMAGE $DOCKER_DEPLOY_PRODUCTION_IMAGE
+    - docker push $DOCKER_DEPLOY_PRODUCTION_IMAGE
+
+"Deploy to production":
+  stage: deploy
+  tags:
+    - deploy
+  only:
+    - /^v\d+\.\d+\.\d+(\-[a-z]+)?$/
+  except:
+    - branches
+  script:
+    - deploy.sh
+  environment:
+    name: production
+  dependencies: []
+  when: manual

@@ -1,0 +1,9 @@
+version: '2.2'
+
+services:
+  app:
+    stop_signal: SIGINT
+    image: local/whois-proxy
+    ports:
+      - 4343:4343
+      - 2345:2345
