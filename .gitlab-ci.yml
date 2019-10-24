@@ -5,6 +5,12 @@ variables:
   GO_VERSION: "1.13"
   ALPINE_VERSION: "3.10"
 
+before_script:
+  - export
+  - docker info
+  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+
+
 stages:
   - build
   - lint
