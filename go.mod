@@ -14,8 +14,7 @@ require (
 	github.com/shynie/logrus-graylog-hook/v3 v3.0.4
 	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.3.0 // indirect
-	golang.org/x/net v0.0.0-20220722155237-a158d28d115b
-	golang.org/x/text v0.3.8 // indirect
+	golang.org/x/net v0.17.0
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/yaml.v2 v2.2.4 // indirect
 )
